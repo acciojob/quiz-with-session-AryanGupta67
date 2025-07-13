@@ -30,10 +30,10 @@ const questionContainer = document.getElementById("questions");
 const scoreContainer = document.getElementById("score");
 const submitButton = document.getElementById("submit");
 
-// Try to load saved progress
+// Restore previous selections if any
 let savedProgress = JSON.parse(sessionStorage.getItem("progress")) || {};
 
-// Render all questions
+// Render quiz questions and options
 function renderQuestions() {
   questionContainer.innerHTML = "";
 
@@ -52,12 +52,13 @@ function renderQuestions() {
       input.name = `question-${index}`;
       input.value = choice;
 
-      // Restore previous selection
+      // Restore previously saved selection
       if (savedProgress[`question-${index}`] === choice) {
         input.checked = true;
-        input.setAttribute("checked", "true"); // for Cypress
+        input.setAttribute("checked", "true"); // Cypress needs this
       }
 
+      // Save selection on change
       input.addEventListener("change", () => {
         savedProgress[`question-${index}`] = input.value;
         sessionStorage.setItem("progress", JSON.stringify(savedProgress));
@@ -73,18 +74,18 @@ function renderQuestions() {
   });
 }
 
-// Score display on load if already submitted
+// Display previously saved score if available
 if (localStorage.getItem("score") !== null) {
   scoreContainer.textContent = `Your score is ${localStorage.getItem("score")} out of 5.`;
 }
 
-// Submit quiz
+// Submit handler
 submitButton.addEventListener("click", () => {
   let score = 0;
 
   questions.forEach((q, index) => {
-    const answer = savedProgress[`question-${index}`];
-    if (answer === q.answer) {
+    const selected = savedProgress[`question-${index}`];
+    if (selected === q.answer) {
       score++;
     }
   });
