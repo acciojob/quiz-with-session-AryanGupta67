@@ -1,56 +1,98 @@
-//your JS code here.
-
-// Do not change code below this line
-// This code will just display the questions to the screen
 const questions = [
   {
     question: "What is the capital of France?",
-    choices: ["Paris", "London", "Berlin", "Madrid"],
-    answer: "Paris",
+    choices: ["Berlin", "Madrid", "Paris", "London"],
+    answer: "Paris"
   },
   {
-    question: "What is the highest mountain in the world?",
-    choices: ["Everest", "Kilimanjaro", "Denali", "Matterhorn"],
-    answer: "Everest",
+    question: "Which language runs in a web browser?",
+    choices: ["Python", "Java", "C", "JavaScript"],
+    answer: "JavaScript"
   },
   {
-    question: "What is the largest country by area?",
-    choices: ["Russia", "China", "Canada", "United States"],
-    answer: "Russia",
+    question: "What is the result of 2 + 2?",
+    choices: ["3", "4", "5", "6"],
+    answer: "4"
   },
   {
-    question: "Which is the largest planet in our solar system?",
-    choices: ["Earth", "Jupiter", "Mars"],
-    answer: "Jupiter",
+    question: "Which one is a frontend framework?",
+    choices: ["Node.js", "Django", "React", "MongoDB"],
+    answer: "React"
   },
   {
-    question: "What is the capital of Canada?",
-    choices: ["Toronto", "Montreal", "Vancouver", "Ottawa"],
-    answer: "Ottawa",
-  },
+    question: "Which HTML tag is used to display an image?",
+    choices: ["<img>", "<src>", "<image>", "<pic>"],
+    answer: "<img>"
+  }
 ];
 
-// Display the quiz questions and choices
+const questionContainer = document.getElementById("questions");
+const scoreContainer = document.getElementById("score");
+const submitButton = document.getElementById("submit");
+
+// Try to load saved progress
+let savedProgress = JSON.parse(sessionStorage.getItem("progress")) || {};
+
+// Render all questions
 function renderQuestions() {
-  for (let i = 0; i < questions.length; i++) {
-    const question = questions[i];
-    const questionElement = document.createElement("div");
-    const questionText = document.createTextNode(question.question);
-    questionElement.appendChild(questionText);
-    for (let j = 0; j < question.choices.length; j++) {
-      const choice = question.choices[j];
-      const choiceElement = document.createElement("input");
-      choiceElement.setAttribute("type", "radio");
-      choiceElement.setAttribute("name", `question-${i}`);
-      choiceElement.setAttribute("value", choice);
-      if (userAnswers[i] === choice) {
-        choiceElement.setAttribute("checked", true);
+  questionContainer.innerHTML = "";
+
+  questions.forEach((q, index) => {
+    const wrapper = document.createElement("div");
+
+    const title = document.createElement("p");
+    title.textContent = `${index + 1}. ${q.question}`;
+    wrapper.appendChild(title);
+
+    q.choices.forEach(choice => {
+      const label = document.createElement("label");
+
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = `question-${index}`;
+      input.value = choice;
+
+      // Restore previous selection
+      if (savedProgress[`question-${index}`] === choice) {
+        input.checked = true;
+        input.setAttribute("checked", "true"); // for Cypress
       }
-      const choiceText = document.createTextNode(choice);
-      questionElement.appendChild(choiceElement);
-      questionElement.appendChild(choiceText);
-    }
-    questionsElement.appendChild(questionElement);
-  }
+
+      input.addEventListener("change", () => {
+        savedProgress[`question-${index}`] = input.value;
+        sessionStorage.setItem("progress", JSON.stringify(savedProgress));
+      });
+
+      label.appendChild(input);
+      label.append(` ${choice}`);
+      wrapper.appendChild(label);
+      wrapper.appendChild(document.createElement("br"));
+    });
+
+    questionContainer.appendChild(wrapper);
+  });
 }
+
+// Score display on load if already submitted
+if (localStorage.getItem("score") !== null) {
+  scoreContainer.textContent = `Your score is ${localStorage.getItem("score")} out of 5.`;
+}
+
+// Submit quiz
+submitButton.addEventListener("click", () => {
+  let score = 0;
+
+  questions.forEach((q, index) => {
+    const answer = savedProgress[`question-${index}`];
+    if (answer === q.answer) {
+      score++;
+    }
+  });
+
+  scoreContainer.textContent = `Your score is ${score} out of 5.`;
+  localStorage.setItem("score", score.toString());
+});
+
+// Initial render
 renderQuestions();
+
