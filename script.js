@@ -1,7 +1,7 @@
 const questions = [
   {
     question: "What is the capital of France?",
-    choices: ["Berlin", "Madrid", "Paris", "London"],
+    choices: ["Berlin", "Madrid", "Paris", "Rome"],
     answer: "Paris"
   },
   {
@@ -10,7 +10,7 @@ const questions = [
     answer: "JavaScript"
   },
   {
-    question: "What is the result of 2 + 2?",
+    question: "What is 2 + 2?",
     choices: ["3", "4", "5", "6"],
     answer: "4"
   },
@@ -21,79 +21,84 @@ const questions = [
   },
   {
     question: "Which HTML tag is used to display an image?",
-    choices: ["<img>", "<src>", "<image>", "<pic>"],
+    choices: ["<img>", "<image>", "<src>", "<pic>"],
     answer: "<img>"
   }
 ];
 
+// Get HTML elements
 const questionContainer = document.getElementById("questions");
-const scoreContainer = document.getElementById("score");
-const submitButton = document.getElementById("submit");
+const submitBtn = document.getElementById("submit");
+const scoreDiv = document.getElementById("score");
 
-// Restore previous selections if any
-let savedProgress = JSON.parse(sessionStorage.getItem("progress")) || {};
+// Load previous answers from sessionStorage
+let userAnswers = JSON.parse(sessionStorage.getItem("progress")) || {};
 
-// Render quiz questions and options
+// Render questions
 function renderQuestions() {
   questionContainer.innerHTML = "";
 
-  questions.forEach((q, index) => {
-    const wrapper = document.createElement("div");
+  questions.forEach((q, qIndex) => {
+    const div = document.createElement("div");
 
-    const title = document.createElement("p");
-    title.textContent = `${index + 1}. ${q.question}`;
-    wrapper.appendChild(title);
+    // Question text
+    const p = document.createElement("p");
+    p.textContent = `${qIndex + 1}. ${q.question}`;
+    div.appendChild(p);
 
-    q.choices.forEach(choice => {
+    // Options
+    q.choices.forEach((choice, cIndex) => {
       const label = document.createElement("label");
-
       const input = document.createElement("input");
       input.type = "radio";
-      input.name = `question-${index}`;
+      input.name = `q${qIndex}`;
       input.value = choice;
 
-      // Restore previously saved selection
-      if (savedProgress[`question-${index}`] === choice) {
+      // Check previously selected answer
+      if (userAnswers[`q${qIndex}`] === choice) {
         input.checked = true;
-        input.setAttribute("checked", "true"); // Cypress needs this
+        input.setAttribute("checked", "true"); // for Cypress
       }
 
-      // Save selection on change
+      // Store answer on change
       input.addEventListener("change", () => {
-        savedProgress[`question-${index}`] = input.value;
-        sessionStorage.setItem("progress", JSON.stringify(savedProgress));
+        userAnswers[`q${qIndex}`] = input.value;
+        sessionStorage.setItem("progress", JSON.stringify(userAnswers));
       });
 
       label.appendChild(input);
       label.append(` ${choice}`);
-      wrapper.appendChild(label);
-      wrapper.appendChild(document.createElement("br"));
+      div.appendChild(label);
+      div.appendChild(document.createElement("br"));
     });
 
-    questionContainer.appendChild(wrapper);
+    questionContainer.appendChild(div);
   });
 }
 
-// Display previously saved score if available
-if (localStorage.getItem("score") !== null) {
-  scoreContainer.textContent = `Your score is ${localStorage.getItem("score")} out of 5.`;
-}
-
-// Submit handler
-submitButton.addEventListener("click", () => {
+// Handle submission
+submitBtn.addEventListener("click", () => {
   let score = 0;
 
-  questions.forEach((q, index) => {
-    const selected = savedProgress[`question-${index}`];
-    if (selected === q.answer) {
+  questions.forEach((q, i) => {
+    if (userAnswers[`q${i}`] === q.answer) {
       score++;
     }
   });
 
-  scoreContainer.textContent = `Your score is ${score} out of 5.`;
+  const scoreText = `Your score is ${score} out of 5.`;
+  scoreDiv.textContent = scoreText;
+
   localStorage.setItem("score", score.toString());
 });
 
-// Initial render
+// Display stored score if present
+const storedScore = localStorage.getItem("score");
+if (storedScore !== null) {
+  scoreDiv.textContent = `Your score is ${storedScore} out of 5.`;
+}
+
+// Render everything
 renderQuestions();
+
 
